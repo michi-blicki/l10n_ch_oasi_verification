@@ -37,7 +37,7 @@ Read in this order:
 
 | File | Purpose | Lines | Complexity |
 |------|---------|-------|------------|
-| [models/oasi_validator.py](models/oasi_validator.py) | Pure Python validation (ISO 7064 Mod 11,10) | 170 | ⭐⭐⭐ |
+| [models/oasi_validator.py](models/oasi_validator.py) | Pure Python validation (EAN-13 algorithm) | 170 | ⭐⭐⭐ |
 | [models/oasi_mixin.py](models/oasi_mixin.py) | Reusable Odoo model mixin | 90 | ⭐⭐ |
 | [models/model_extensions.py](models/model_extensions.py) | Extensions to hr.employee & res.partner | 50 | ⭐ |
 
@@ -142,7 +142,7 @@ Swiss Social Security ID:
 - Starts with 756 (Switzerland)
 - Last digit is check digit
 
-### What is ISO 7064 Mod 11,10?
+### What is EAN-13?
 **File:** [DOCUMENTATION.md](DOCUMENTATION.md) → "Algorithm Details"
 
 Swiss standard check digit algorithm:
@@ -295,7 +295,7 @@ l10n_ch_oasi_verification/
 → [tests.py](tests.py) - Unit test framework
 
 ### To understand the algorithm:
-→ [DOCUMENTATION.md](DOCUMENTATION.md) - ISO 7064 Mod 11,10  
+→ [DOCUMENTATION.md](DOCUMENTATION.md) - EAN-13 Algorithm  
 → [OVERVIEW.md](OVERVIEW.md) - Step-by-step example  
 → [models/oasi_validator.py](models/oasi_validator.py) - Implementation
 
