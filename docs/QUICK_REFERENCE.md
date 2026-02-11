@@ -75,15 +75,15 @@ class MyModel(models.Model):
 - Check digit: **Last digit** (calculated)
 - Replaceable with any digits: Positions 4-12
 
-## Check Digit Algorithm
+## Check Digit Algorithm (EAN-13)
 
 ```
 Input: 756123456789 (12 digits)
-Weights: [5,4,3,2,7,6,5,4,3,2,7,6]
-Sum = 7×5 + 5×4 + 6×3 + 1×2 + 2×7 + 3×6 + 4×5 + 5×4 + 6×3 + 7×2 + 8×7 + 9×6
-    = 35 + 20 + 18 + 2 + 14 + 18 + 20 + 20 + 18 + 14 + 56 + 54 = 289
-Check digit = (11 - (289 mod 11)) mod 10 = (11 - 3) mod 10 = 8
-Result: 7561234567898
+Weights: [1,3,1,3,1,3,1,3,1,3,1,3] (alternating)
+Sum = 7×1 + 5×3 + 6×1 + 1×3 + 2×1 + 3×3 + 4×1 + 5×3 + 6×1 + 7×3 + 8×1 + 9×3
+    = 7 + 15 + 6 + 3 + 2 + 9 + 4 + 15 + 6 + 21 + 8 + 27 = 123
+Check digit = (10 - (123 mod 10)) mod 10 = (10 - 3) mod 10 = 7
+Result: 7561234567897
 ```
 
 ## Error Handling

@@ -4,7 +4,7 @@ OASI (Old-Age and Survivors' Insurance) Validation Utility
 
 This module provides validation utilities for Swiss Social Security IDs (OASI/AHV/AVS).
 The OASI is a 13-digit number that always starts with 756 (Switzerland ISO 3166-1 numeric).
-The last digit is a check digit calculated using ISO 7064 Mod 11,10 algorithm.
+The last digit is a check digit calculated using the EAN-13 algorithm (modulo 10).
 
 Format: 756.XXXX.XXXX.XX or 756XXXXXXXXXX
 """
@@ -18,7 +18,6 @@ class OASIValidator:
 
     COUNTRY_CODE = "756"  # Switzerland ISO 3166-1 numeric
     TOTAL_DIGITS = 13
-    WEIGHTS = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6]  # Weights for ISO 7064 Mod 11,10
 
     @classmethod
     def sanitize(cls, oasi_string):
@@ -65,7 +64,12 @@ class OASIValidator:
     @classmethod
     def calculate_check_digit(cls, oasi_string):
         """
-        Calculate the check digit for OASI using ISO 7064 Mod 11,10.
+        Calculate the check digit for OASI using EAN-13 algorithm.
+
+        The Swiss OASI number uses the EAN-13 (modulo 10) algorithm:
+        1. Assign weights alternating 1 and 3 (odd positions get 1, even get 3)
+        2. Calculate sum = Σ(digit × weight) for first 12 digits
+        3. Check digit = (10 - (sum % 10)) % 10
 
         Args:
             oasi_string: String representation of first 12 digits
@@ -89,11 +93,15 @@ class OASIValidator:
                 "Input must be 12 digits for check digit calculation"
             )
 
-        # Calculate sum with weights
-        total = sum(int(digit) * weight for digit, weight in zip(digits, cls.WEIGHTS))
+        # EAN-13 algorithm: alternating weights of 1 and 3
+        # Position 0 (1st digit) gets weight 1, position 1 (2nd digit) gets weight 3, etc.
+        total = 0
+        for i, digit_char in enumerate(digits):
+            weight = 3 if i % 2 == 1 else 1
+            total += int(digit_char) * weight
 
-        # ISO 7064 Mod 11,10: check_digit = (11 - (sum mod 11)) mod 10
-        check_digit = (11 - (total % 11)) % 10
+        # Check digit calculation
+        check_digit = (10 - (total % 10)) % 10
 
         return check_digit
 

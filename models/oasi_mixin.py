@@ -3,7 +3,7 @@
 OASI Validation Mixin
 
 This mixin provides OASI validation functionality that can be added to any model.
-It automatically validates OASI fields using the ISO 7064 Mod 11,10 algorithm.
+It automatically validates OASI fields using the EAN-13 algorithm (modulo 10).
 
 Usage example:
     class HrEmployee(models.Model):

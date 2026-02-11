@@ -29,7 +29,7 @@ The `l10n_ch_oasi_verification` addon provides a complete, reusable solution for
 │  - is_valid()                                   │
 │  - validate_or_raise()                          │
 │  - calculate_check_digit()                      │
-│  - ISO 7064 Mod 11,10 Algorithm                 │
+│  - EAN-13 Algorithm (Modulo 10)                │
 └─────────────────────────────────────────────────┘
 ```
 

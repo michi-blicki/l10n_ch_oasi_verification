@@ -2,7 +2,7 @@
 {
     'name': "l10n_ch_oasi_verification",
 
-    'summary': "Swiss OASI (Social Security ID) validation using ISO 7064 Mod 11,10",
+    'summary': "Swiss OASI (Social Security ID) validation using EAN-13 algorithm",
 
     'description': """
         Swiss OASI/AHV/AVS Verification Module
@@ -13,7 +13,7 @@
 
         Features:
         - Format validation (13 digits starting with 756 - Switzerland ISO 3166-1 numeric)
-        - Check digit validation using ISO 7064 Mod 11,10 algorithm
+        - Check digit validation using EAN-13 algorithm (modulo 10)
         - Reusable validation utilities that can be integrated into any model
         - Pre-built validators for hr.employee and res.partner ssnid fields
         - Easy-to-use mixin for custom models

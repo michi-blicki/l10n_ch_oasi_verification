@@ -111,7 +111,7 @@ No code needed - validation is automatic!
 
 ## Algorithm Implementation
 
-### ISO 7064 Mod 11,10 Check Digit
+### EAN-13 Check Digit (Modulo 10)
 
 The module implements Swiss OASI check digit calculation:
 
@@ -121,19 +121,19 @@ Example: 756.1234.5678.97
 Step 1: Extract first 12 digits
         7 5 6 1 2 3 4 5 6 7 8 9
 
-Step 2: Apply weights
-        [5,4,3,2,7,6,5,4,3,2,7,6]
+Step 2: Apply alternating weights (odd positions=1, even positions=3)
+        [1,3,1,3,1,3,1,3,1,3,1,3]
 
 Step 3: Calculate sum
-        7×5 + 5×4 + 6×3 + 1×2 + 2×7 + 3×6 + 4×5 + 5×4 + 6×3 + 7×2 + 8×7 + 9×6
-        = 35 + 20 + 18 + 2 + 14 + 18 + 20 + 20 + 18 + 14 + 56 + 54
-        = 289
+        7×1 + 5×3 + 6×1 + 1×3 + 2×1 + 3×3 + 4×1 + 5×3 + 6×1 + 7×3 + 8×1 + 9×3
+        = 7 + 15 + 6 + 3 + 2 + 9 + 4 + 15 + 6 + 21 + 8 + 27
+        = 123
 
 Step 4: Calculate check digit
-        289 mod 11 = 3
-        (11 - 3) mod 10 = 8
+        123 mod 10 = 3
+        (10 - 3) mod 10 = 7
 
-Result: Check digit = 8, so OASI is 756.1234.5678.98
+Result: Check digit = 7, so OASI is 756.1234.5678.97
 ```
 
 ---
@@ -197,7 +197,7 @@ class GuardianshipCase(models.Model):
 - Last digit is check digit
 
 ✅ **Check Digit Validation**
-- ISO 7064 Mod 11,10 algorithm
+- EAN-13 algorithm (modulo 10)
 - Validates mathematical correctness
 - Detects transposition errors
 
@@ -363,7 +363,7 @@ Clear and helpful:
 - Working code examples
 - Troubleshooting guide
 
-### 5. ISO 7064 Mod 11,10
+### 5. EAN-13 Algorithm (Modulo 10)
 - Industry standard algorithm
 - Matches official OASI specification
 - Validates more than just format
@@ -429,7 +429,7 @@ This module provides a complete, professional-grade solution for OASI validation
 ✅ **Extensible** - Designed for customization  
 ✅ **Tested** - Includes test cases  
 ✅ **Fast** - Efficient pure Python implementation  
-✅ **Standards compliant** - ISO 7064 Mod 11,10  
+✅ **Standards compliant** - EAN-13 algorithm  
 
 ---
 

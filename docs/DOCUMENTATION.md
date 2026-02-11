@@ -9,7 +9,7 @@ The `l10n_ch_oasi_verification` module provides a robust, reusable validation sy
 - **Alternative Format**: 756XXXXXXXXXX (without dots)
 - **Country Code**: 756 (Switzerland ISO 3166-1 numeric)
 - **Total Digits**: 13
-- **Check Digit**: Last digit calculated using ISO 7064 Mod 11,10
+- **Check Digit**: Last digit calculated using EAN-13 algorithm (modulo 10)
 
 ## Components
 
@@ -293,14 +293,14 @@ class PersonRecord(models.Model):
 
 ## Algorithm Details
 
-### ISO 7064 Mod 11,10 Algorithm
+### EAN-13 Algorithm (Modulo 10)
 
 The check digit is calculated as follows:
 
 1. Take the first 12 digits of the OASI
-2. Define weights: [5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6]
+2. Apply alternating weights: odd positions (1,3,5,7,9,11) get weight 1, even positions (2,4,6,8,10,12) get weight 3
 3. Calculate: `sum = Σ(digit[i] × weight[i])` for i = 0 to 11
-4. Calculate: `check_digit = (11 - (sum mod 11)) mod 10`
+4. Calculate: `check_digit = (10 - (sum mod 10)) mod 10`
 5. The 13th digit is the check digit
 
 ### Example Calculation
@@ -309,15 +309,14 @@ For OASI `756123456789_` (where _ is check digit):
 
 ```
 Digits:  7  5  6  1  2  3  4  5  6  7  8  9
-Weights: 5  4  3  2  7  6  5  4  3  2  7  6
+Weights: 1  3  1  3  1  3  1  3  1  3  1  3
 ---------
-Products: 35 20 18  2 14 18 20 20 18 14 56 54 = 289
+Products: 7 15  6  3  2  9  4 15  6 21  8 27 = 123
 
-289 mod 11 = 3
-11 - 3 = 8
-8 mod 10 = 8
+123 mod 10 = 3
+10 - 3 = 7
 
-Check digit = 8
+Check digit = 7
 ```
 
 ## Error Messages

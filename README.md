@@ -14,12 +14,12 @@ OASI (Old-Age and Survivors' Insurance) is the Swiss Social Security ID used for
 - Alternative: `756XXXXXXXXXX` (without dots)
 - Always starts with `756` (Switzerland ISO 3166-1 numeric code)
 - Contains exactly **13 digits**
-- Last digit is a **check digit** (ISO 7064 Mod 11,10 algorithm)
+- Last digit is a **check digit** (EAN-13 algorithm)
 
 ## Features
 
 ✅ **Format Validation** - Ensures OASI has correct format (13 digits, starts with 756)  
-✅ **Check Digit Validation** - Uses ISO 7064 Mod 11,10 algorithm  
+✅ **Check Digit Validation** - Uses EAN-13 algorithm (modulo 10)  
 ✅ **Real-Time User Feedback** - Immediate validation warnings with @api.onchange  
 ✅ **Save-Time Validation** - Error prevention at record save with @api.constrains  
 ✅ **Reusable Validators** - Use anywhere in your code  
@@ -235,22 +235,22 @@ python -m odoo --test-enable -d test_db -m l10n_ch_oasi_verification -k TestOASI
 
 ## Algorithm Details
 
-The validation uses **ISO 7064 Mod 11,10** check digit algorithm:
+The validation uses the **EAN-13** check digit algorithm (modulo 10):
 
 1. Take first 12 digits
-2. Apply weights: `[5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6]`
+2. Apply alternating weights: positions 1,3,5,7,9,11 get weight 1; positions 2,4,6,8,10,12 get weight 3
 3. Calculate sum: `Σ(digit × weight)`
-4. Check digit: `(11 - (sum mod 11)) mod 10`
+4. Check digit: `(10 - (sum mod 10)) mod 10`
 
 **Example:**
 ```
 Number:  756 1234 5678 9X
-Weights: 5 4 3 2 7 6 5 4 3 2 7 6
-Product: 35+20+18+2+14+18+20+20+18+14+56+54 = 289
+Weights: 1 3 1 3 1 3 1 3 1 3  1  3
+Product: 7+15+6+3+2+9+4+15+6+21+8+27 = 123
 
-289 mod 11 = 3
-Check digit = (11 - 3) mod 10 = 8
-Therefore: 756.1234.5678.98
+123 mod 10 = 3
+Check digit = (10 - 3) mod 10 = 7
+Therefore: 756.1234.5678.97
 ```
 
 ## Common Error Messages
