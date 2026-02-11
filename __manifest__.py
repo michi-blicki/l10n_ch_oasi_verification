@@ -31,6 +31,8 @@
 
     'author': "Michael Blickenstorfer, AI-assisted by Claude Haiku 4.5",
     'website': "https://github.com/michi-blicki/l10n_ch_oasi_verification/",
+    'license': 'AGPL-3',
+    
     'installable': True,
     'application': False,
     'auto_install': False,
