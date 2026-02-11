@@ -53,7 +53,7 @@ class TestOASIValidator(TransactionCase):
 
         # Another example
         check_digit = OASIValidator.calculate_check_digit("756000000002")
-        self.assertEqual(check_digit, 9)
+        self.assertEqual(check_digit, 6)
 
     def test_validate_check_digit_valid(self):
         """Test check digit validation for valid OASI"""
