@@ -296,6 +296,28 @@ def batch_validate_oasis(records):
 
 ## Best Practices
 
+### Environment Type Configuration (`ir.config.parameter`)
+
+The addon determines runtime behavior with:
+
+`self.env['ir.config.parameter'].sudo().get_param('environment_type')`
+
+Supported values:
+- `production`
+- `staging`
+- `development`
+
+Rules applied by the mixin:
+- In `production`, OASI values in test range `756.9900.0000.00` to `756.9999.9999.99` are rejected.
+- In `staging` and `development`, this test range is allowed, but full format and check-digit validation still runs.
+- Missing or unknown values are treated as `production`.
+
+Set parameter example:
+
+```python
+env['ir.config.parameter'].sudo().set_param('environment_type', 'production')
+```
+
 ### 1. Always Use Constraints
 
 ```python

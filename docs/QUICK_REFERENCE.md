@@ -51,6 +51,27 @@ class MyModel(models.Model):
 | `is_valid_format(oasi)` | `(bool, str)` | Check format only (not check digit) |
 | `validate_check_digit(oasi)` | `(bool, int)` | Check digit validation with expected value |
 
+## Environment Type (Required for test-range behavior)
+
+The addon reads:
+
+`self.env['ir.config.parameter'].sudo().get_param('environment_type')`
+
+Allowed values:
+- `production`
+- `staging`
+- `development`
+
+Behavior:
+- `production`: rejects test-range OASI `756.9900.0000.00` to `756.9999.9999.99`
+- `staging`, `development`: allows this range (still validates format/check digit)
+
+Set it in Odoo shell:
+
+```python
+env['ir.config.parameter'].sudo().set_param('environment_type', 'production')
+```
+
 ## Mixin Methods
 
 | Method | Returns | Use Case |

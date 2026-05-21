@@ -116,6 +116,52 @@ class TestOASIValidator(TransactionCase):
         with self.assertRaises(ValidationError):
             OASIValidator.validate_or_raise("756.1234.5678.96", field_name="OASI")
 
+    def test_is_test_range_boundaries(self):
+        """Test official Swiss OASI test range boundaries"""
+        self.assertTrue(OASIValidator.is_test_range("756.9900.0000.00"))
+        self.assertTrue(OASIValidator.is_test_range("756.9999.9999.99"))
+
+    def test_is_test_range_outside_values(self):
+        """Test values outside official test range"""
+        self.assertFalse(OASIValidator.is_test_range("756.9899.9999.99"))
+        self.assertFalse(OASIValidator.is_test_range("756.1234.5678.97"))
+
+    def test_is_test_range_invalid_format(self):
+        """Invalid format should not be considered a test range value"""
+        self.assertFalse(OASIValidator.is_test_range("invalid"))
+        self.assertFalse(OASIValidator.is_test_range(""))
+
+    def test_normalize_environment_type(self):
+        """Environment type should normalize and fallback safely to production"""
+        self.assertEqual(
+            OASIValidator.normalize_environment_type("production"),
+            OASIValidator.ENV_TYPE_PRODUCTION,
+        )
+        self.assertEqual(
+            OASIValidator.normalize_environment_type(" Staging "),
+            OASIValidator.ENV_TYPE_STAGING,
+        )
+        self.assertEqual(
+            OASIValidator.normalize_environment_type("DEVELOPMENT"),
+            OASIValidator.ENV_TYPE_DEVELOPMENT,
+        )
+        self.assertEqual(
+            OASIValidator.normalize_environment_type("unknown"),
+            OASIValidator.ENV_TYPE_PRODUCTION,
+        )
+
+    def test_is_non_production_environment_type(self):
+        """Only staging/development should be treated as non-production"""
+        self.assertFalse(
+            OASIValidator.is_non_production_environment_type("production")
+        )
+        self.assertTrue(
+            OASIValidator.is_non_production_environment_type("staging")
+        )
+        self.assertTrue(
+            OASIValidator.is_non_production_environment_type("development")
+        )
+
 
 class OASIValidationExamples:
     """

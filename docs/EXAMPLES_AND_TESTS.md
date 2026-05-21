@@ -201,6 +201,8 @@ except Exception as e:
 print("\nTest 3: Update policy with valid OASI")
 try:
     policy = env['insurance.policy'].search([('/name', '=', 'Test Policy')])[0]
+    # Test-range OASI is valid only in staging/development environment_type
+    env['ir.config.parameter'].sudo().set_param('environment_type', 'staging')
     policy.write({'insured_oasi': '756.9999.9999.90'})
     print("  ✓ Policy updated successfully")
     print(f"  OASI: {policy.insured_oasi}")
@@ -280,7 +282,7 @@ employee_data = [
     },
     {
         'name': 'Jane Smith',
-        'ssnid': '756.9999.9999.90'  # Valid
+        'ssnid': '756.9999.9999.90'  # Valid in staging/development
     },
     {
         'name': 'Bob Johnson',

@@ -62,6 +62,24 @@ Calculate the check digit for a 12-digit OASI.
 check_digit = OASIValidator.calculate_check_digit("756123456789")  # Returns: 0
 ```
 
+##### `is_test_range(oasi_string)`
+Checks whether a value is in the official Swiss test range.
+
+```python
+OASIValidator.is_test_range("756.9900.0000.00")  # True
+OASIValidator.is_test_range("756.9999.9999.99")  # True
+OASIValidator.is_test_range("756.1234.5678.97")  # False
+```
+
+##### Environment Type Helpers
+The validator provides helper methods used by the mixin:
+
+```python
+OASIValidator.normalize_environment_type("staging")            # "staging"
+OASIValidator.is_non_production_environment_type("development")  # True
+OASIValidator.is_non_production_environment_type("production")   # False
+```
+
 ### 2. OASIValidationMixin (`models/oasi_mixin.py`)
 
 Abstract model mixin that provides OASI validation methods for any Odoo model.
@@ -83,6 +101,32 @@ class MyModel(models.Model):
     @api.constrains('oasi_number')
     def _validate_oasi(self):
         self._validate_oasi_field('oasi_number', field_label='OASI Number')
+```
+
+#### Runtime Environment Configuration
+
+The mixin reads the runtime environment via:
+
+`self.env['ir.config.parameter'].sudo().get_param('environment_type')`
+
+Supported values:
+- `production`
+- `staging`
+- `development`
+
+Behavior:
+- Test-range OASI (`756.9900.0000.00` to `756.9999.9999.99`) is rejected in `production`.
+- Test-range OASI is allowed in `staging` and `development` (format/check-digit still validated).
+- Unknown or missing value is treated as `production` (safe default).
+
+Example setup (Odoo shell or server action):
+
+```python
+env['ir.config.parameter'].sudo().set_param('environment_type', 'production')
+# or
+env['ir.config.parameter'].sudo().set_param('environment_type', 'staging')
+# or
+env['ir.config.parameter'].sudo().set_param('environment_type', 'development')
 ```
 
 ##### `is_oasi_valid(field_name)`

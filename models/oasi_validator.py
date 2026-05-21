@@ -18,6 +18,11 @@ class OASIValidator:
 
     COUNTRY_CODE = "756"  # Switzerland ISO 3166-1 numeric
     TOTAL_DIGITS = 13
+    ENV_TYPE_PRODUCTION = "production"
+    ENV_TYPE_STAGING = "staging"
+    ENV_TYPE_DEVELOPMENT = "development"
+    TEST_RANGE_START = "7569900000000"
+    TEST_RANGE_END = "7569999999999"
 
     @classmethod
     def sanitize(cls, oasi_string):
@@ -191,3 +196,47 @@ class OASIValidator:
                 )
         except ValueError as e:
             raise ValidationError(f"Invalid {field_name}: {str(e)}")
+
+    @classmethod
+    def is_test_range(cls, oasi_string):
+        """
+        Check if OASI is in the official Swiss test/simulation range.
+
+        Range: 756.9900.0000.00 to 756.9999.9999.99
+
+        Args:
+            oasi_string: String representation of OASI (with or without dots)
+
+        Returns:
+            Boolean indicating if OASI is in test range
+        """
+        format_valid, sanitized = cls.is_valid_format(oasi_string)
+        if not format_valid:
+            return False
+
+        return cls.TEST_RANGE_START <= sanitized <= cls.TEST_RANGE_END
+
+    @classmethod
+    def normalize_environment_type(cls, environment_type):
+        """
+        Normalize runtime environment type to one of known values.
+
+        Unknown or empty values are treated as production for safe defaults.
+        """
+        normalized = (environment_type or "").strip().lower()
+        if normalized in {
+            cls.ENV_TYPE_PRODUCTION,
+            cls.ENV_TYPE_STAGING,
+            cls.ENV_TYPE_DEVELOPMENT,
+        }:
+            return normalized
+        return cls.ENV_TYPE_PRODUCTION
+
+    @classmethod
+    def is_non_production_environment_type(cls, environment_type):
+        """Return True for staging/development environment types."""
+        normalized = cls.normalize_environment_type(environment_type)
+        return normalized in {
+            cls.ENV_TYPE_STAGING,
+            cls.ENV_TYPE_DEVELOPMENT,
+        }
