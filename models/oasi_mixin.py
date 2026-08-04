@@ -60,6 +60,7 @@ class OASIValidationMixin(models.AbstractModel):
         duplicate_record, duplicate_model = self._find_oasi_duplicate_record(
             field_name=field_name,
             sanitized_oasi=sanitized_oasi,
+            current_record=self,
         )
 
         if duplicate_record:
@@ -67,6 +68,35 @@ class OASIValidationMixin(models.AbstractModel):
                 f"{field_label} {sanitized_oasi} is already assigned "
                 f"(model: {duplicate_model}, record ID: {duplicate_record.id})."
             )
+
+    def _get_oasi_source_identity(self, record, field_name):
+        """Return canonical identity for the source record behind a field value."""
+        field = record._fields.get(field_name)
+        if not field:
+            return None
+
+        # For related fields, compare the underlying source record/field identity.
+        related_path = getattr(field, "related", None)
+        if related_path:
+            source_record = record
+            for relation_name in related_path[:-1]:
+                source_record = source_record[relation_name]
+                if not source_record:
+                    return None
+            source_record = source_record[:1]
+            if not source_record.id:
+                return None
+            return (source_record._name, source_record.id, related_path[-1])
+
+        if not record.id:
+            return None
+        return (record._name, record.id, field_name)
+
+    def _is_same_oasi_source(self, current_record, current_field_name, other_record, other_field_name):
+        """Return True when two values point to the same logical source entity."""
+        current_identity = self._get_oasi_source_identity(current_record, current_field_name)
+        other_identity = self._get_oasi_source_identity(other_record, other_field_name)
+        return bool(current_identity and other_identity and current_identity == other_identity)
 
     def _get_uniqueness_model_names(self, field_name):
         """Return model names that contain the given field name."""
@@ -84,8 +114,10 @@ class OASIValidationMixin(models.AbstractModel):
 
         return list(dict.fromkeys(model_names))
 
-    def _find_oasi_duplicate_record(self, field_name, sanitized_oasi):
+    def _find_oasi_duplicate_record(self, field_name, sanitized_oasi, current_record=None):
         """Find first duplicate OASI record across all relevant models."""
+        current = (current_record or self)[:1]
+
         for model_name in self._get_uniqueness_model_names(field_name):
             model = self.env[model_name].sudo().with_context(active_test=False)
             domain = [(field_name, "!=", False)]
@@ -93,12 +125,18 @@ class OASIValidationMixin(models.AbstractModel):
                 domain.append(("id", "not in", self.ids))
 
             candidates = model.search(domain)
-            duplicate = candidates.filtered(
-                lambda rec: OASIValidator.sanitize(getattr(rec, field_name, None))
-                == sanitized_oasi
-            )
-            if duplicate:
-                return duplicate[0], model_name
+            for candidate in candidates:
+                candidate_oasi = OASIValidator.sanitize(getattr(candidate, field_name, None))
+                if candidate_oasi != sanitized_oasi:
+                    continue
+                if current and self._is_same_oasi_source(
+                    current_record=current,
+                    current_field_name=field_name,
+                    other_record=candidate,
+                    other_field_name=field_name,
+                ):
+                    continue
+                return candidate, model_name
 
         return None, None
 
@@ -263,6 +301,7 @@ class OASIValidationMixin(models.AbstractModel):
             duplicate_record, duplicate_model = self._find_oasi_duplicate_record(
                 field_name=field_name,
                 sanitized_oasi=sanitized,
+                current_record=self,
             )
             if duplicate_record:
                 return {
