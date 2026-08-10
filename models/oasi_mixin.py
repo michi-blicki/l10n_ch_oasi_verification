@@ -65,6 +65,7 @@ class OASIValidationMixin(models.AbstractModel):
 
         if duplicate_record:
             raise ValidationError(
+                f"OASI Mixin: "
                 f"{field_label} {sanitized_oasi} is already assigned "
                 f"(model: {duplicate_model}, record ID: {duplicate_record.id})."
             )
@@ -78,6 +79,10 @@ class OASIValidationMixin(models.AbstractModel):
         # For related fields, compare the underlying source record/field identity.
         related_path = getattr(field, "related", None)
         if related_path:
+            # Normalize related_path to tuple (handle both string and tuple formats)
+            if isinstance(related_path, str):
+                related_path = tuple(related_path.split('.'))
+            
             source_record = record
             for relation_name in related_path[:-1]:
                 source_record = source_record[relation_name]
@@ -98,45 +103,33 @@ class OASIValidationMixin(models.AbstractModel):
         other_identity = self._get_oasi_source_identity(other_record, other_field_name)
         return bool(current_identity and other_identity and current_identity == other_identity)
 
-    def _get_uniqueness_model_names(self, field_name):
-        """Return model names that contain the given field name."""
-        field_definitions = self.env["ir.model.fields"].sudo().search(
-            [("name", "=", field_name), ("ttype", "=", "char")]
-        )
-        model_names = []
-        for field_definition in field_definitions:
-            model_name = field_definition.model
-            if model_name in self.env:
-                model_names.append(model_name)
-
-        if not model_names:
-            return [self._name]
-
-        return list(dict.fromkeys(model_names))
-
     def _find_oasi_duplicate_record(self, field_name, sanitized_oasi, current_record=None):
-        """Find first duplicate OASI record across all relevant models."""
+        """
+        Find first duplicate OASI record within the same model.
+        
+        Only searches within the current model to avoid false positives when
+        different models use related fields pointing to the same source.
+        """
         current = (current_record or self)[:1]
+        model = self.env[self._name].sudo().with_context(active_test=False)
+        
+        domain = [(field_name, "!=", False)]
+        if self.ids:
+            domain.append(("id", "not in", self.ids))
 
-        for model_name in self._get_uniqueness_model_names(field_name):
-            model = self.env[model_name].sudo().with_context(active_test=False)
-            domain = [(field_name, "!=", False)]
-            if model_name == self._name and self.ids:
-                domain.append(("id", "not in", self.ids))
-
-            candidates = model.search(domain)
-            for candidate in candidates:
-                candidate_oasi = OASIValidator.sanitize(getattr(candidate, field_name, None))
-                if candidate_oasi != sanitized_oasi:
-                    continue
-                if current and self._is_same_oasi_source(
-                    current_record=current,
-                    current_field_name=field_name,
-                    other_record=candidate,
-                    other_field_name=field_name,
-                ):
-                    continue
-                return candidate, model_name
+        candidates = model.search(domain)
+        for candidate in candidates:
+            candidate_oasi = OASIValidator.sanitize(getattr(candidate, field_name, None))
+            if candidate_oasi != sanitized_oasi:
+                continue
+            if current and self._is_same_oasi_source(
+                current_record=current,
+                current_field_name=field_name,
+                other_record=candidate,
+                other_field_name=field_name,
+            ):
+                continue
+            return candidate, self._name
 
         return None, None
 
